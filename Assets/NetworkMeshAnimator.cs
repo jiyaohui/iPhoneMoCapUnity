@@ -7,7 +7,9 @@ public class NetworkMeshAnimator {
 
 	private UDPServer listner;
 	private SkinnedMeshRenderer meshTarget;
-	private UnityMainThreadDispatcher dispatcher;
+    private SkinnedMeshRenderer meshTargetHuayi;
+    private SkinnedMeshRenderer meshTargetHuayi2;
+    private UnityMainThreadDispatcher dispatcher;
 	private bool isAcceptingMessages = false;
 
 	private static NetworkMeshAnimator instance;
@@ -78,18 +80,26 @@ public class NetworkMeshAnimator {
 
 	public IEnumerator SetBlendShapesOnMainThread(string messageString) {
 
+        // 对消息字符串中以“|”分隔的每一段进行操作
 		foreach (string message in messageString.Split (new Char[] { '|' }))
 		{
-			var cleanString = message.Replace (" ", "").Replace ("msg:", "");
+            // 格式化接收到的消息字符串，去除空格和“msg:”字样，便于对应BlendShapes名称
+            var cleanString = message.Replace (" ", "").Replace ("msg:", "");
+            // 将消息字符串按分隔符“-”分拆到字符串数组（键值、权重）
 			var strArray  = cleanString.Split (new Char[] {'-'});
 
+            // 如果收到的是2个字符串（键值：权重）
 			if (strArray.Length == 2) {
+                // 数组中第2项为权重（浮点型）
 				var weight = float.Parse (strArray.GetValue (1).ToString());
 
-				var mappedShapeName = strArray.GetValue (0).ToString ().Replace ("_L", "Left").Replace ("_R", "Right");
+                // 数组中第2项为BlendShape名称（字符串），且将“_L”和“_R”替换为“Left”和“Right”
+                var mappedShapeName = strArray.GetValue (0).ToString ().Replace ("_L", "Left").Replace ("_R", "Right");
 
-				var index = meshTarget.sharedMesh.GetBlendShapeIndex (mappedShapeName);
+                // 取得meshTarget（场景中的“BlendShapeTarget”）中该BlendShape名称对应的序号
+                var index = meshTarget.sharedMesh.GetBlendShapeIndex (mappedShapeName);
 
+                // 若能找到对应的序号，则将对应的BlendShape设为该序号（名称）对应的权重，否则忽略
 				if (index > -1) {
 					meshTarget.SetBlendShapeWeight (index, weight);
 				}
