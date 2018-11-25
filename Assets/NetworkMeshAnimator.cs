@@ -8,7 +8,6 @@ public class NetworkMeshAnimator {
 	private UDPServer listner;
 	private SkinnedMeshRenderer meshTarget;
     private SkinnedMeshRenderer meshTargetHuayi;
-    private SkinnedMeshRenderer meshTargetHuayi2;
     private UnityMainThreadDispatcher dispatcher;
 	private bool isAcceptingMessages = false;
 
@@ -53,13 +52,20 @@ public class NetworkMeshAnimator {
 		Debug.Log("Started accepting messages");
 
 		meshTarget = GameObject.Find ("BlendShapeTarget").GetComponent<SkinnedMeshRenderer> ();
+        meshTargetHuayi = GameObject.Find("ast_huayi_head_1").GetComponent<SkinnedMeshRenderer>();
 
-		if (meshTarget == null) {
+        if (meshTarget == null) {
 			Debug.LogError ("Cannot find BlendShapeTarget. Have you added it to your scene?");
 			return;
-		}
+        }
 
-		if (UnityMainThreadDispatcher.Exists()) {
+        if (meshTargetHuayi == null)
+        {
+            Debug.LogError("Cannot find Huayi BlendShapeTarget. Have you added it to your scene?");
+            return;
+        }
+
+        if (UnityMainThreadDispatcher.Exists()) {
 			dispatcher = UnityMainThreadDispatcher.Instance ();
 		} else {
 			Debug.LogError ("Cannot reach BlendShapeTarget. Have you added the UnityMainThreadDispatcher to your scene?");
@@ -98,12 +104,19 @@ public class NetworkMeshAnimator {
 
                 // 取得meshTarget（场景中的“BlendShapeTarget”）中该BlendShape名称对应的序号
                 var index = meshTarget.sharedMesh.GetBlendShapeIndex (mappedShapeName);
+                var indexHuayi = meshTargetHuayi.sharedMesh.GetBlendShapeIndex("ARFaceAnchor." +mappedShapeName);
 
                 // 若能找到对应的序号，则将对应的BlendShape设为该序号（名称）对应的权重，否则忽略
-				if (index > -1) {
+                if (index > -1) {
 					meshTarget.SetBlendShapeWeight (index, weight);
-				}
-			}
+                }
+
+                // 若能找到对应的序号，则将对应的BlendShape设为该序号（名称）对应的权重，否则忽略
+                if (indexHuayi > -1)
+                {
+                    meshTargetHuayi.SetBlendShapeWeight(indexHuayi, weight);
+                }
+            }
 		}
 
 		yield return null;
